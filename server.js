@@ -3,7 +3,8 @@ const http = require("http");
 const express = require("express");
 const socketio = require("socket.io");
 const formatMessage = require("./src/utils/messages");
-const { joinUser, getCurrentUser } = require("./src/utils/users");
+const { joinUser, getCurrentUser, userLeave,
+    getRoomUsers } = require("./src/utils/users");
 
 
 const botName = 'ChatCord Bot';
@@ -18,22 +19,32 @@ app.use(express.static(path.join(__dirname, "src")));
 //Run when a client connects 
 io.on('connection', socket => {
     socket.on('joinRoom', ({ username, room }) => {
-        socket.on('joinRoom', (username, room) => { })
+        const id = socket.id
+        const user = joinUser({ id, username, room })
+        socket.join(user.room)
         //This method will emit to the user that's connecting.
         socket.emit("message", formatMessage(botName, 'Welcome to ChatCord!'));
-
         //Broadcast when a user connects. Will emit to everybody eccept the user that's connecting.
-        socket.broadcast.emit("message", formatMessage(botName, "A user has joined the chat!"))
+        socket.broadcast.to(user.room).emit("message", formatMessage(botName, `${user.username} has joined the chat!`));
+        //Send users and room info
+        io.to(user.room).emit('roomUsers', { room: user.room, users: getRoomUsers(user.room) });
     })
     //If you want to broadcast to everybody ==> io.emit()
 
     //Listen for chat message
     socket.on("chatMsg", (message) => {
-        io.emit('message', formatMessage('User', message));
+        const user = getCurrentUser(socket.id);
+        io.to(user.room).emit('message', formatMessage(user.username, message));
     });
     //Runs when user disconects
     socket.on("disconnect", () => {
-        io.emit("message", formatMessage(botName, "A user has left the chat"))
+        const user = userLeave(socket.id);
+        if (user) {
+            io.to(user.room).emit("message", formatMessage(botName, `${user.username} has left the chat`))
+        };
+
+        //Send users and room info
+        io.to(user.room).emit('roomUser', { room: user.room, users: getRoomUsers(user.room) })
     });
 });
 const port = 3000 || process.env.PORT;
