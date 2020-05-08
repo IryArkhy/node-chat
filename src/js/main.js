@@ -2,6 +2,7 @@ const chatForm = document.getElementById('chat-form');
 const chatMessages = document.querySelector('.chat-messages');
 const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
+
 //Get UserName and Room from url
 const { username, room } = Qs.parse(location.search, {
     ignoreQueryPrefix: true
@@ -39,7 +40,7 @@ const outputUsers = (users) => {
 }
 //Message from server
 socket.on('message', info => {
-    console.log('info: ', info);
+
     //Message into DOM
     otputMessage(info);
     //Scroll down
