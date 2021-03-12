@@ -7,23 +7,23 @@ const { joinUser, getCurrentUser, userLeave,
     getRoomUsers } = require("./src/utils/users");
 
 
-const botName = 'ChatCord Bot';
+const botName = 'CS50 Bot';
 
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 
-//Set static folder 
+//Set static folder
 app.use(express.static(path.join(__dirname, "src")));
 
-//Run when a client connects 
+//Run when a client connects
 io.on('connection', socket => {
     socket.on('joinRoom', ({ username, room }) => {
         const id = socket.id
         const user = joinUser({ id, username, room })
         socket.join(user.room)
         //This method will emit to the user that's connecting.
-        socket.emit("message", formatMessage(botName, 'Welcome to ChatCord!'));
+        socket.emit("message", formatMessage(botName, 'Welcome to CS50 Chat!'));
         //Broadcast when a user connects. Will emit to everybody eccept the user that's connecting.
         socket.broadcast.to(user.room).emit("message", formatMessage(botName, `${user.username} has joined the chat!`));
         //Send users and room info
